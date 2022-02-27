@@ -1,0 +1,18 @@
+# This is the Instruction File for automated Deployment of IOTC
+1. Do a Git clone of the repo using below link,
+git clone git@github.com:saurabhranjan1/iotctest.git
+
+Note: Make Sure you have Uploaded the Public Key in Github
+
+2. Navigate to /deploy/local-deployment folder.
+
+3. Execute deployment.sh with 2 parameters as below,
+./ deployment.sh <<IOTCLicenseKey>> <<Location of Self Signed .crt and .key file>>
+
+4. Once Deployment is Complete, then run docker ps to verify if all sevices ( Proxy, INGRESS, API, NGINX, MQTT etc ) are Running.
+
+Prerequisites:
+1. Docker, Docker Compose Should be Present.
+2. Generate the Self Signed Certificate using below link,
+https://iotconnector-docs.readthedocs.io/en/latest/additional-notes/#generating-self-signed-certificates
+3. Linux Libraries like OpenSSL, Replace should be present. If not, should be installed based on the flavours of Linux

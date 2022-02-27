@@ -1,0 +1,160 @@
+version: '3.9'
+services:
+    redis:
+        image: redis:latest
+        command: redis-server --protected-mode no
+        volumes:
+            - redis-volume:/data
+        deploy:
+            resources:
+                reservations:
+                    cpus: "0.15"
+                    memory: "0.4g"
+                limits:
+                    cpus: "0.25"
+                    memory: "0.4g"
+    ingress:
+        image: enocean/iotconnector_ingress:latest
+        environment:
+            - REDIS_URL=localhost
+            - IOT_LICENSE_KEY=  #enter license here, be sure not to have empty space after "=" e.g. IOT_LICENSE_KEY=LBIBA-BRZHX-SVEOU-ARPWB
+            - IOT_AUTH_CALLBACK=  #enter URL here e.g. 192.167.1.1:8080 or yourDomainName.yourRegion.azurecontainer.io:8080
+            # IOT_ARUBA_USERNAME & IOT_ARUBA_PASSWORD are deprecated.
+            - IOT_GATEWAY_USERNAME=  #enter new username for the AP connection to IoTC. e.g. user1
+            - IOT_GATEWAY_PASSWORD=  #enter new password for the AP connection to IoTC. e.g. gkj35zkjasb5
+        deploy:
+            resources:
+                reservations:
+                    cpus: "0.24"
+                    memory: "0.3g"
+                limits:
+                    cpus: "0.5"
+                    memory: "0.3g"
+            restart_policy:
+                condition: any
+                delay: 120s
+                max_attempts: 5
+                window: 120s
+        depends_on:
+            - redis
+    api:
+        image: enocean/iotconnector_api:latest
+        environment:
+            - REDIS_URL=localhost
+        deploy:
+            resources:
+                reservations:
+                    cpus: "0.1"
+                    memory: "0.3g"
+                limits:
+                    cpus: "0.15"
+                    memory: "0.3g"
+            restart_policy:
+                condition: any
+                delay: 120s
+                max_attempts: 5
+                window: 120s
+        depends_on:
+            - redis
+    engine:
+        image: enocean/iotconnector_engine:latest
+        environment:
+            - REDIS_URL=localhost
+            - IOT_LICENSE_KEY= #enter license here, be sure not to have empty space after "=" e.g. IOT_LICENSE_KEY=LBIBA-BRZHX-SVEOU-ARPWB
+            #- IOT_ENABLE_MQTT=1 # comment this section out if mqtt is not desired. #MQTT_LOCAL_EGRESS_ENABLE is deprecated use IOT_MQTT enable.
+            #- MQTT_CONNSTRING=127.0.0.1:1883  # comment this section out if mqtt is not desired. Default path is locally deployed mosquitto broker - for tests only.
+            #- MQTT_AUTH=1 # Comment this section out and specficy below credentials to use basic auth for MQTT connections. If you the mosquito broker also use the enocean build.
+            #- MQTT_USERNAME=
+            #- MQTT_PASSWORD=
+            - IOT_AZURE_ENABLE=1         # comment this section out if azure is not desired
+            - IOT_AZURE_CONNSTRING=      # specify the connection string
+            - SENSOR_STATS_INTERVAL=600  # report interval in s of sensor stats
+            - GATEWAY_STATS_INTERVAL=600 # report interval in s of gateway stats
+            #MQTT publish PATH can be customized with ENV variables. Please check the Product documentation for details: https://iotconnector-docs.readthedocs.io/en/latest/deployment-notes/#overview-of-environment-variables
+        deploy:
+            resources:
+                reservations:
+                    cpus: "0.25"
+                    memory: "0.4g"
+                limits:
+                    cpus: "1"
+                    memory: "0.4g"
+            restart_policy:
+                condition: any
+                delay: 120s
+                max_attempts: 5
+                window: 120s
+        depends_on:
+            - redis
+            - mqtt
+    proxy:
+        image: enocean/proxy:azure
+        ports:
+            - "443:443"
+            - "80:80"
+            - "8080:8080"
+        secrets:
+            - source: secret-proxy-certificate
+              target: /etc/nginx/certs/cert.crt
+            - source: secret-proxy-key
+              target: /etc/nginx/certs/cert.key
+        domainname: "yourDomainName" # specify the name of your domain. This is then used in also in IOT_AUTH_CALLBACK
+        environment:
+            - BASIC_AUTH_USERNAME=   #enter new username for API connection of IoTC. e.g. user1
+            - BASIC_AUTH_PASSWORD=   #enter new password for API connection to IoTC. e.g. 5a4sdFa$dsa
+        depends_on:
+            - ingress
+            - api
+        deploy:
+            resources:
+                reservations:
+                    cpus: "0.15"
+                    memory: "0.3g"
+                limits:
+                    cpus: "0.25"
+                    memory: "0.3g"
+            restart_policy:
+                condition: any
+                delay: 120s
+                max_attempts: 5
+                window: 120s
+
+    # mosquitto broker is only deployed for demo purpouses and is not secured nor configured for a commercial deployment.
+    # OPTION 1: Please use own broker.
+    # Option 2: Configure the mosquitto broker to be secure - https://mosquitto.org/man/mosquitto-tls-7.html,
+    #   Example with mosquitto broker in Docker + TLS: https://medium.com/himinds/mqtt-broker-with-secure-tls-and-docker-compose-708a6f483c92
+    #   Example with mosquitto broker in Docker + lets encrypt: https://medium.com/himinds/mqtt-broker-with-secure-websocket-using-traefik-docker-compose-and-lets-encrypt-2b8e32207555
+    #   Example with mosquitto broker in Docker + user authentication: https://centurio.net/2019/12/16/configure-mosquitto-mqtt-broker-user-authentication-in-docker-running-on-synology-nas/, https://stackoverflow.com/questions/46742443/mqtt-server-in-docker-a-way-to-run-the-mosquitto-passwd-u-from-dockercompos
+    # OPTION 3: You can use a commercial broker e.g. HiveMQ https://www.hivemq.com/blog/mqtt-security-fundamentals-tls-ssl/
+    mqtt:
+        image: eclipse-mosquitto:1.6.13
+        #image: enocean/enocean-mosquitto:latest If you want to use MQTT Basic Auth, use this image for the broker.
+        ports:
+            - "1883:1883"
+        #environment: # ENV parameters are only available if using enocean/enocean-mosquitto:latest
+            #- ALLOW_ANON=true # Set to false for MQTT authentification. Set credentials username and password below.
+            #- MQTT_USERNAME=
+            #- MQTT_PASSWORD=
+        deploy:
+            resources:
+                reservations:
+                    cpus: "0.1"
+                    memory: "0.1g"
+                limits:
+                    cpus: '0.14'
+                    memory: 0.1g
+
+# Change share_name and storage_account_name to match your Azure Files volumes names.
+volumes:
+    redis-volume:
+        driver: azure_file
+        driver_opts:
+            share_name: your-volume-name
+            storage_account_name: mystorageaccount
+
+#secrets are defined by docker to keep sensitive information hidden
+secrets:
+    secret-proxy-certificate:
+        file: ../nginx/dev.localhost.crt
+    secret-proxy-key:
+        file: ../nginx/dev.localhost.key

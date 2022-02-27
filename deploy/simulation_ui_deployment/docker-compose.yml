@@ -1,0 +1,22 @@
+version: '3.9'
+services:
+    demo_api:
+        restart: always
+        image: enocean/iotconnector_demo_api
+        ports:
+            - "5100"
+        environment:
+            # Use ´host.docker.internal´ when connecting to another docker container
+            - IOT_AUTH_URL=https://host.docker.internal:8080/auth/aruba
+            - IOT_API_URL=https://host.docker.internal/api.beta/v1/devices
+            - IOT_ENDPOINT_USERNAME=user # IoTC gateway username
+            - IOT_ENDPOINT_PASSWORD=pass # IoTC gateway password
+            - IOT_API_USERNAME=user # IoTC api username
+            - IOT_API_PASSWORD=pass # IoTC api password
+    demo:
+        restart: always
+        ports:
+            - "3000:3000"
+        image: enocean/iotconnector_demo
+        depends_on:
+            - demo_api

@@ -1,0 +1,62 @@
+
+image: python:3.7.2
+
+pipelines:
+  custom:
+    Generate Release Notes:
+      - variables:
+          - name: ENVIRONMENT
+      - step:
+          name: Generate supported EEP List
+          script:
+            - cd ./docs/
+            - git clone git@bitbucket.org:enocean-cloud/iotconnector_engine.git
+            - cd ./iotconnector_engine/
+            - python --version
+            - pip install -r pipeline.requirements.txt
+            - python eep_table_gen.py
+            - ls -la
+            - cd ..
+            - mv -fv ./iotconnector_engine/eep.md eep.md
+            - git pull
+            - git add eep.md
+            - git commit --allow-empty -m "[Pipeline commit] - Updating Supported EEP List, generate with /iotconnector_engine/eep_table_gen.py"
+            - git push
+      - step:
+          name: Generate JSON Schemas for client side JSON egress (MQTT/ Azure IoT Hub etc.)
+          script:
+            - cd ./docs/
+            - git clone git@bitbucket.org:enocean-cloud/iotconnector_engine.git
+            - cd ./iotconnector_engine/
+            - python --version
+            - pip install -r pipeline.requirements.txt
+            - python schema_gen.py
+            - cd ./schema_jsons/
+            - ls -la
+            - pipe: atlassian/bitbucket-upload-file:0.3.2
+              variables:
+                BITBUCKET_USERNAME: $BIT_USERNAME
+                BITBUCKET_APP_PASSWORD: $APP_PASS_SCHEMA_GEN
+                FILENAME: '*.json'
+      - step:
+          name: Clone API definition file to documentation from /iotconnector_api/swagger_server/swagger/swagger.yaml - master branch
+          script:
+            - cd ./docs/
+            - git clone git@bitbucket.org:enocean-cloud/iotconnector_api.git
+            - mv -fv ./iotconnector_api/iotconnector_api/swagger_server/swagger/swagger.yaml openapi.yaml
+            - git pull
+            - git add openapi.yaml
+            - git commit --allow-empty -m "[Pipeline commit] - Updating api specification with the latest version from git@bitbucket.org:enocean-cloud/iotconnector_api/src/master/iotconnector_api/swagger_server/swagger/swagger.yaml"
+            - git push
+      - step:
+          name: Generating documentation from Jira Version ID $ENVIRONMENT
+          script:
+             - python --version
+             - pip install -r requirements.txt
+             - python ./scripts/generate-iotc-release-notes.py -s $jiratoken -v $ENVIRONMENT
+             - mv -f notes.md ./docs/release-notes/release-$ENVIRONMENT.md
+             - cd ./docs/release-notes/
+             - git pull
+             - git add release-$ENVIRONMENT.md
+             - git commit --allow-empty -m "[Pipeline commit] - Updating release notes with Jira Version ID "$ENVIRONMENT
+             - git push

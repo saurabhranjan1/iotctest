@@ -1,0 +1,64 @@
+site_name: EnOcean IoT Connector Documentation
+site_url: https://iot.enocean.com/
+repo_url: https://bitbucket.org/enocean-cloud/iotconnector-docs/src/master/
+edit_uri: docs
+site_author: EnOcean GmbH
+
+markdown_extensions:
+  - attr_list
+  - pymdownx.superfences
+  - pymdownx.tabbed
+  - admonition
+  - toc:
+        permalink: true
+        toc_depth: 4
+  - pymdownx.emoji:
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg
+
+plugins:
+- include-markdown
+- search
+- macros
+- with-pdf:
+    cover_logo: https://iot.enocean.com/wp-content/uploads/2021/04/enocean-iot-connector-logo.svg
+    cover_subtitle: Product Documentation
+    cover_title: ' '
+    output_path: pdf/IoTC-documentation.pdf
+    heading_shift: true
+    toc_level: 3
+    #ordered_chapter_level: 4
+    #debug_html: true
+    custom_template_path: ./docs/templates
+    exclude_pages:
+      - 'api-documentation/'
+      - 'downloads/'
+- render_swagger
+- literate-nav:
+    nav_file: SUMMARY.md
+
+
+extra:
+  generator: false
+
+copyright: Copyright &copy; 2022 EnOcean GmbH
+
+extra_css:
+  - stylesheets/extra.css
+
+#use_directory_urls: true
+
+theme:
+  name: material
+  favicon: img/favicon.png
+  logo: img/favicon.png
+  features:
+    #- navigation.instant
+    #- navigation.expand
+    - navigation.sections
+    - navigation.top
+    #- navigation.tabs
+    #- navigation.indexes
+    - toc.integrate
+  icon:
+    repo: fontawesome/brands/bitbucket
