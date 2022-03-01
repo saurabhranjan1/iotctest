@@ -9,10 +9,10 @@ Note: Make Sure you have Uploaded the Public Key in Github
 3. Execute deployment.sh with 2 parameters as below,
 ./ deployment.sh <<IOTCLicenseKey>> <<Location of Self Signed .crt and .key file>>
 
-4. Once Deployment is Complete, then run docker ps to verify if all sevices ( Proxy, INGRESS, API, NGINX, MQTT etc ) are Running.
+4. Once Deployment is Complete, then run docker ps to verify if all sevices ( Proxy, INGRESS, API, NGINX, MQTT, Demo UI etc ) are Running.
 
 Prerequisites:
-1. Docker, Docker Compose Should be Present.
+1. Docker, Docker Compose Should be Installed if it is not there.
 2. Generate the Self Signed Certificate using below link,
 https://iotconnector-docs.readthedocs.io/en/latest/additional-notes/#generating-self-signed-certificates
-3. Linux Libraries like OpenSSL, Replace should be present. If not, should be installed based on the flavours of Linux
+3. Linux Libraries like OpenSSL, Replace should be present. If not, should be installed based on the flavours of Linux.

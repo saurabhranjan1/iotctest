@@ -6,13 +6,13 @@ services:
         ports:
             - "5100"
         environment:
-            # Use ´host.docker.internal´ when connecting to another docker container
-            - IOT_AUTH_URL=https://host.docker.internal:8080/auth/aruba
-            - IOT_API_URL=https://host.docker.internal/api.beta/v1/devices
-            - IOT_ENDPOINT_USERNAME=user # IoTC gateway username
-            - IOT_ENDPOINT_PASSWORD=pass # IoTC gateway password
-            - IOT_API_USERNAME=user # IoTC api username
-            - IOT_API_PASSWORD=pass # IoTC api password
+            # Use ´52.172.254.232´ when connecting to another docker container
+            - IOT_AUTH_URL=https://52.172.254.232:8080/auth/aruba
+            - IOT_API_URL=https://52.172.254.232/api.beta/v1/devices
+            - IOT_ENDPOINT_USERNAME=user1
+            - IOT_ENDPOINT_PASSWORD=gkj35zkjasb5
+            - IOT_API_USERNAME=user1
+            - IOT_API_PASSWORD=5a4sdFaedsa
     demo:
         restart: always
         ports:
